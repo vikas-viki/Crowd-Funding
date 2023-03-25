@@ -28,6 +28,39 @@ contract CrowdFunding {
 
     mapping(uint256 => Campaign) public campaigns;
 
+    // to remove the campaign once it is finished;
+    function destroyCampaign(uint256 _id) internal {
+        delete campaigns[_id];
+    }
+
+    // events to log when the campaign is created, donated and refunded by the user.
+    event CampaignCreated(
+        address indexed owner,
+        string title,
+        string description,
+        uint256 target,
+        uint256 deadline,
+        string image
+    );
+    event DonationMade(
+        uint256 indexed id,
+        address indexed donator,
+        uint256 amount,
+        bool agreed
+    );
+    event RefundIssued(
+        uint256 indexed id,
+        address indexed donator,
+        uint256 amount
+    );
+    event withdrawn(uint256 _id, string message);
+
+    modifier onlyOwner(uint256 _id) {
+        Campaign storage campaign = campaigns[_id];
+        require(msg.sender == campaign.owner, "Only owner can withdraw funds.");
+        _;
+    }
+
     // To keep track of campaigns.
     uint256 public numberOfCampaigns = 0;
 
@@ -56,7 +89,7 @@ contract CrowdFunding {
         );
 
         // Get the camapign.
-        Campaign storage campaign = campaigns[numberOfCampaigns++];
+        Campaign storage campaign = campaigns[numberOfCampaigns];
 
         // Set the details of campaign.
         campaign.owner = _owner;
@@ -66,6 +99,16 @@ contract CrowdFunding {
         campaign.deadline = _deadline;
         campaign.image = _image;
 
+        // emit the event to log that the campaign was successfully created.
+        emit CampaignCreated(
+            _owner,
+            _title,
+            _description,
+            _target,
+            _deadline,
+            _image
+        );
+        numberOfCampaigns++;
         return numberOfCampaigns - 1;
     }
 
@@ -76,17 +119,37 @@ contract CrowdFunding {
         // Get the campaign which the user is willing to fund.
         Campaign storage campaign = campaigns[_id];
 
+        // check if the campaign was successfully completed.
+        require(
+            campaign.owner != address(0),
+            "Campaign was successfully completed"
+        );
+
+        // Check if the deadline is met or not.
+        require(campaign.deadline > block.timestamp, "deadline already met");
+
         // Check if the minimum value is met so that we can ensue the fee of the transaction even.
-        require(amount >= 62000 wei, "Minimum contribution value not met");
+        require(amount >= 62000 wei, "Minimum contribution value not met.");
 
         // Check if the owner is not calling the transaction.
         require(msg.sender != campaign.owner, "Owner can't call transaction");
 
-        // Add the donator to Donators list.
-        campaign.donators.push(msg.sender);
+        bool donatorExists = false;
+        uint i;
+        for (i = 0; i < campaign.donators.length; i++) {
+            if (msg.sender == campaign.donators[i]) {
+                donatorExists = true;
+            }
+        }
+        if (donatorExists) {
+            campaign.donations[i] = campaign.donations[i] + amount;
+        } else {
+            // Add the donator to Donators list.
+            campaign.donators.push(msg.sender);
 
-        // Add the donation amount to Donations.
-        campaign.donations.push(amount);
+            // Add the donation amount to Donations.
+            campaign.donations.push(amount);
+        }
 
         if (_agree == false) {
             campaign.agree.push(-1);
@@ -94,13 +157,8 @@ contract CrowdFunding {
             campaign.agree.push(1);
         }
 
-        // Check if the dnation amount sent successfully.
-        (bool sent, ) = payable(campaign.owner).call{value: amount}("");
-        require(
-            sent == true,
-            "Donation wasn't sent due to some error & refunded"
-        );
-
+        // emit the event to specify that the donation has been sent.
+        emit DonationMade(_id, msg.sender, amount, _agree);
         // Increment the donation amount collected.
         campaign.AmountCollected += amount;
     }
@@ -110,14 +168,26 @@ contract CrowdFunding {
         // Get the campaign.
         Campaign storage campaign = campaigns[_id];
 
+        // check if the campaign was successfully completed.
+        require(
+            campaign.owner != address(0),
+            "Campaign was successfully completed"
+        );
+
         // Check if the deadline for the campaign is exceeded.
-        require(block.timestamp > campaign.deadline, "Deadline not met");
+        require(campaign.deadline < block.timestamp, "Deadline not met");
 
         // Check if the target has been reached.
         require(campaign.AmountCollected < campaign.target, "Target reached");
 
         // Check if the owner is not calling the transaction.
         require(msg.sender != campaign.owner, "Owner can't call transaction");
+
+        // check if the amount is already withdrawn by campaign owner.
+        require(
+            campaign.AmountCollected > 0,
+            "Amount has already been withdrawn by campaign owner"
+        );
 
         // Find the index of the donator in the donators array.
         uint256 donatorIndex = 0;
@@ -155,16 +225,17 @@ contract CrowdFunding {
         (bool sent, ) = payable(msg.sender).call{value: donationAmount}("");
         require(sent == true, "Failed to send refund");
 
+        // emit the event to specify that the refund was successful.
+        emit RefundIssued(_id, msg.sender, donationAmount);
+
         // Decrement the amount collected.
         campaign.AmountCollected -= donationAmount;
     }
 
     // Get all the donators with their donations amount & return.
-    function getDonators(uint256 _id)
-        public
-        view
-        returns (address[] memory, uint256[] memory)
-    {
+    function getDonators(
+        uint256 _id
+    ) public view returns (address[] memory, uint256[] memory) {
         return (campaigns[_id].donators, campaigns[_id].donations);
     }
 
@@ -187,9 +258,15 @@ contract CrowdFunding {
         a poll to donators & if there is 51% support to withdraw the funds for the campaign even if the target amount is
         not met & withdraw the funded amount.
     */
-    function withdrawFunds(uint256 _id) public {
+    function withdrawFunds(uint256 _id) public onlyOwner(_id) {
         // Get the campaign.
         Campaign storage campaign = campaigns[_id];
+
+        // check if the campaign was successfully completed.
+        require(
+            campaign.owner != address(0),
+            "Campaign was successfully completed"
+        );
 
         // Check if the deadline for the campaign is exceeded.
         require(block.timestamp > campaign.deadline, "Deadline not met");
@@ -228,15 +305,30 @@ contract CrowdFunding {
             }("");
             require(sent == true, "Failed to send funds to campaign owner");
 
+            // emit to specify that the withdrawal was successful, even if the target was not met.
+            emit withdrawn(
+                _id,
+                "Successfully withdrawn funds from campaign owner, by donators agreement"
+            );
+
             // Set the amount collected to zero.
             campaign.AmountCollected = 0;
         } else {
             // Transfer the collected amount to the campaign owner.
             (bool sent, ) = payable(campaign.owner).call{
-                value: campaign.AmountCollected
+                value: campaign.AmountCollected,
+                gas: 10000
             }("");
             require(sent == true, "Failed to send funds to campaign owner");
 
+            // Destroy the campaign.
+            destroyCampaign(_id);
+
+            // emit to specify that the withdrawal was successful
+            emit withdrawn(
+                _id,
+                "Successfully withdrawn funds from campaign owner"
+            );
             // Set the amount collected to zero.
             campaign.AmountCollected = 0;
         }
