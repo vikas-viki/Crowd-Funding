@@ -25,8 +25,10 @@ contract CrowdFunding {
 
     mapping(uint256 => Campaign) public campaigns;
 
+    // To keep track of campaigns.
     uint256 public numberOfCampaigns = 0;
 
+    // To create new campaign.
     function createCampaign(
         address _owner,
         string memory _title,
@@ -49,6 +51,7 @@ contract CrowdFunding {
         return numberOfCampaigns - 1;
     }
 
+    // To donate to a campaign of a specific ID
     function donateToCampaign(uint256 _id) public payable{
         uint256 amount = msg.value;
 
@@ -64,10 +67,12 @@ contract CrowdFunding {
         }
     }
 
+    // Get all the donators with their donations amount.
     function getDonators(uint256 _id) public view returns(address[] memory, uint256[] memory) {
         return (campaigns[_id].donators, campaigns[_id].donations);
     }
 
+    // Get all the campaigns that are created.
     function getCampaigns() public view returns(Campaign[] memory){
         Campaign[] memory allCampaigns = new Campaign[](numberOfCampaigns);
 
