@@ -9,7 +9,10 @@
     "hardhat": "^2.10.1"
   },
   "dependencies": {
+    "@nomicfoundation/hardhat-network-helpers": "^1.0.8",
     "@thirdweb-dev/contracts": "^3",
-    "dotenv": "^16.0.3"
+    "chai": "^4.3.7",
+    "dotenv": "^16.0.3",
+    "ethers": "^6.1.0"
   }
 }
