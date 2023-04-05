@@ -1,47 +1,21 @@
-## Getting Started
+# Crowd Funding Solidity
 
-Create a project using this example:
+Thos project has completely built using `Solidity`, completely tested using `Hardhat` and deployed on `Sepolia` testnet.
 
-```bash
-npx thirdweb create --contract --template hardhat-javascript-starter
-```
+## Using Code
 
-You can start editing the page by modifying `contracts/Contract.sol`.
+- Run `npm install` to install dependencies.
 
-To add functionality to your contracts, you can use the `@thirdweb-dev/contracts` package which provides base contracts and extensions to inherit. The package is already installed with this project. Head to our [Contracts Extensions Docs](https://portal.thirdweb.com/contractkit) to learn more.
+- Run `npx hardhat compile` to compile solidity file.
 
-## Building the project
+- Run `npx hardhat test` to test the file.
 
-After any changes to the contract, run:
+## See live
 
-```bash
-npm run build
-# or
-yarn build
-```
+Yo can see `Contract` [Here.](https://sepolia.etherscan.io/address/0xDa106788f889dA588203a54B0B6356A291512255)
 
-to compile your contracts. This will also detect the [Contracts Extensions Docs](https://portal.thirdweb.com/contractkit) detected on your contract.
 
-## Deploying Contracts
+Here is the testing result : 
+![test](https://i.ibb.co/0mh2Hsh/Frame-1.png)
 
-When you're ready to deploy your contracts, just run one of the following command to deploy you're contracts:
 
-```bash
-npm run deploy
-# or
-yarn deploy
-```
-
-## Releasing Contracts
-
-If you want to release a version of your contracts publicly, you can use one of the followings command:
-
-```bash
-npm run release
-# or
-yarn release
-```
-
-## Join our Discord!
-
-For any questions, suggestions, join our discord at [https://discord.gg/thirdweb](https://discord.gg/thirdweb).

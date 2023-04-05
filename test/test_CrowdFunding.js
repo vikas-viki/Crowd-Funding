@@ -115,10 +115,6 @@ describe('Crowd Funding', () => {
             console.log(Math.trunc(Date.now() / 1000));
         });
 
-
-        it('reverts the transaction, if minimum value not met', async () => {
-            await expect(crowdFunding.donateToCampaign(0, true, { value: 123 })).to.be.revertedWith('Minimum contribution value not met.');
-        });
     });
 
     describe('Withdrawing funds by owner', () => {

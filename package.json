@@ -1,18 +1,17 @@
 {
-  "name": "hardhat-javascript-starter",
+  "name": "crowd-funding",
+  "version": "1.0.0",
+  "description": "crowdfunding",
+  "main": "index.js",
   "scripts": {
-    "build": "npx thirdweb@latest detect",
-    "deploy": "npx thirdweb@latest deploy",
-    "release": "npx thirdweb@latest release"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "author": "",
+  "license": "ISC",
   "devDependencies": {
-    "hardhat": "^2.10.1"
+    "hardhat": "^2.13.0"
   },
   "dependencies": {
-    "@nomicfoundation/hardhat-network-helpers": "^1.0.8",
-    "@thirdweb-dev/contracts": "^3",
-    "chai": "^4.3.7",
-    "dotenv": "^16.0.3",
-    "ethers": "^6.1.0"
+    "@nomicfoundation/hardhat-toolbox": "^2.0.0"
   }
 }
